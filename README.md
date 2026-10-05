@@ -96,8 +96,9 @@ Compared against cisTEM `match_template` on an in-situ 60S ribosome micrograph
 | cisTEM peaks > 6.5σ also > 6.5σ here (±2 px) | 21 | 20 |
 | pose difference at those peaks | | median 0.0°, all < 10° |
 
-Search time on one RTX 3090: about 2 min for this micrograph
-(4092×5760, 20,482 orientations, one defocus).
+On one RTX 3090 this search took ~2 min, vs ~70 s for cisTEM `match_template`
+(2.0.0-alpha GPU build). Full details, including accuracy against a fine-search
+reference particle list: [benchmarks/mic147_vs_cistem.md](benchmarks/mic147_vs_cistem.md).
 
 To reproduce with your own cisTEM run:
 
@@ -105,4 +106,6 @@ To reproduce with your own cisTEM run:
 python scripts/debug_single_pose.py ...   # top cisTEM peaks, one template each
 python scripts/compare_to_cistem.py --ours results/mic147 \
     --cistem '/path/TemplateMatching/<name>_{}_<suffix>.mrc'
+python scripts/score_vs_reference.py ...  # recall/precision vs a cisTEM peak list
+scripts/run_cistem_match_template.sh ...  # timed cisTEM run with the same settings
 ```
