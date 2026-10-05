@@ -74,8 +74,9 @@ one GPU without writing intermediate results.
 ## Differences from cisTEM
 
 - projector is cryojax's Fourier-slice `FourierVoxelGridVolume`. Its Euler
-  convention has phi and psi swapped relative to cisTEM; this is handled
-  internally, and inputs/outputs use cisTEM's convention.
+  convention has phi and psi swapped relative to cisTEM, and its astigmatism
+  angle is 90° minus cisTEM's. Both are converted internally; all inputs and
+  outputs use cisTEM's conventions (defocus angle as in CTFFIND/cisTEM).
 - `--whiten-mode local` (optional, not in cisTEM): patch-wise whitening of the
   micrograph, so that regions with different local spectra (thick ice, vacuoles)
   don't dominate the background. The template still uses the global curve.
@@ -84,11 +85,24 @@ one GPU without writing intermediate results.
 
 ## Validation
 
-Tested against a cisTEM `match_template` run on an in-situ 60S ribosome
-micrograph (1.06 A/px, 10°/7.5°, defocus ±1200/200 A):
+Compared against cisTEM `match_template` on an in-situ 60S ribosome micrograph
+(EMPIAR-10998, 1.06 A/px, 10°/7.5°, no defocus search, same template), both at
+1.06 A/px:
 
-- scaled-MIP background mean/std: 4.53/0.27 for both
-- 12/13 peaks above 7σ found at the same pixel, median pose difference 0.0°
-- defocus agrees within one step
+| | cisTEM | this repo |
+|---|---|---|
+| scaled MIP mean / std | 4.012 / 0.292 | 4.012 / 0.292 |
+| pixel-wise correlation, MIP / scaled MIP | | 0.992 / 0.990 |
+| cisTEM peaks > 6.5σ also > 6.5σ here (±2 px) | 21 | 20 |
+| pose difference at those peaks | | median 0.0°, all < 10° |
 
-Runtime for that search was about 17 min per micrograph on one GPU.
+Search time on one RTX 3090: about 2 min for this micrograph
+(4092×5760, 20,482 orientations, one defocus).
+
+To reproduce with your own cisTEM run:
+
+```bash
+python scripts/debug_single_pose.py ...   # top cisTEM peaks, one template each
+python scripts/compare_to_cistem.py --ours results/mic147 \
+    --cistem '/path/TemplateMatching/<name>_{}_<suffix>.mrc'
+```
